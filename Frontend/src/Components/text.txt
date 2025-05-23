@@ -1,0 +1,308 @@
+import React, { useState } from "react";
+
+const RoomBooking = () => {
+  const [rooms, setRooms] = useState([{ id: 1, orders: [], pricePerDate: "" }]);
+  const [orderInput, setOrderInput] = useState({
+    itemName: "",
+    price: "",
+    quantity: "",
+    paid: false,
+  });
+  const [disableInputs, setDisableInputs] = useState(false); // Disable inputs state
+
+  const addRoom = () => {
+    setRooms((prevRooms) => [
+      ...prevRooms,
+      { id: prevRooms.length + 1, orders: [], pricePerDate: "" },
+    ]);
+  };
+
+  const updateRoomDetails = (roomId, field, value) => {
+    setRooms((prevRooms) =>
+      prevRooms.map((room) =>
+        room.id === roomId ? { ...room, [field]: value } : room
+      )
+    );
+  };
+
+  const calculateTotalRent = (checkinDate, checkoutDate, pricePerDate) => {
+    if (!checkinDate || !checkoutDate || !pricePerDate) return 0;
+
+    const checkin = new Date(checkinDate);
+    const checkout = new Date(checkoutDate);
+    const differenceInTime = checkout.getTime() - checkin.getTime();
+    const differenceInDays = differenceInTime / (1000 * 60 * 60 * 24);
+
+    return differenceInDays > 0
+      ? Math.round(differenceInDays * pricePerDate)
+      : 0;
+  };
+
+  const addOrderToRoom = (roomId) => {
+    if (!orderInput.itemName || !orderInput.price || !orderInput.quantity) {
+      alert("Please fill out all order fields before adding an order.");
+      return;
+    }
+    setRooms((prevRooms) =>
+      prevRooms.map((room) =>
+        room.id === roomId
+          ? { ...room, orders: [...room.orders, orderInput] }
+          : room
+      )
+    );
+    setOrderInput({ itemName: "", price: "", quantity: "", paid: false });
+  };
+
+  const clearRoom = (roomId) => {
+    setRooms((prevRooms) =>
+      prevRooms.map((room) =>
+        room.id === roomId
+          ? { id: room.id, orders: [], pricePerDate: "" }
+          : room
+      )
+    );
+  };
+
+  const printRoomDetails = (roomId) => {
+    const room = rooms.find((r) => r.id === roomId);
+    const roomDetails = `Room Number: ${room.roomNumber || ""}\nCheck-in Date: ${room.checkinDate || ""}\nCheck-in Time: ${room.checkinTime || ""}\nCheck-out Date: ${room.checkoutDate || ""}\nCheck-out Time: ${room.checkoutTime || ""}\nNo. of Persons: ${room.noOfPersons || ""}\nID Proof: ${room.idProof || ""}\nPrice per Date: $${room.pricePerDate || "N/A"}\nOrders: ${room.orders.length === 0 ? "No items added yet." : room.orders.map((order) => `${order.itemName} - $${order.price} x ${order.quantity} (${order.paid ? "Paid" : "Not Paid"})`).join("\n")}`;
+    alert(roomDetails);
+  };
+
+  const handleAddRoomDetails = (roomId) => {
+    setRooms((prevRooms) =>
+      prevRooms.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              addedDetails: {
+                roomNumber: room.roomNumber,
+                checkinDate: room.checkinDate,
+                checkoutDate: room.checkoutDate,
+                pricePerDate: room.pricePerDate,
+                totalRent: calculateTotalRent(
+                  room.checkinDate,
+                  room.checkoutDate,
+                  room.pricePerDate
+                ),
+              },
+            }
+          : room
+      )
+    );
+    setDisableInputs(true); // Disable the input fields after adding
+  };
+
+  return (
+    <div className="p-4">
+      <button
+        onClick={addRoom}
+        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+      >
+        Add Room
+      </button>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {rooms.map((room) => (
+          <div
+            key={room.id}
+            className="border rounded p-4 shadow-md bg-white space-y-2"
+          >
+            <h2 className="font-bold">Room {room.roomNumber || room.id}</h2>
+            <input
+              type="text"
+              placeholder="Room Number"
+              value={room.roomNumber || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "roomNumber", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="date"
+              placeholder="Check-in Date"
+              value={room.checkinDate || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "checkinDate", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="date"
+              placeholder="Check-out Date"
+              value={room.checkoutDate || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "checkoutDate", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="time"
+              placeholder="Check-in Time"
+              value={room.checkinTime || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "checkinTime", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="time"
+              placeholder="Check-out Time"
+              value={room.checkoutTime || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "checkoutTime", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="number"
+              placeholder="No. of Persons"
+              value={room.noOfPersons || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "noOfPersons", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="text"
+              placeholder="ID Proof"
+              value={room.idProof || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "idProof", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+            <input
+              type="number"
+              placeholder="Price per Date"
+              value={room.pricePerDate || ""}
+              onChange={(e) =>
+                updateRoomDetails(room.id, "pricePerDate", e.target.value)
+              }
+              disabled={disableInputs}
+              className="w-full p-2 border rounded mb-2"
+            />
+
+            <button
+              onClick={() => handleAddRoomDetails(room.id)}
+              className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+            >
+              Add
+            </button>
+
+            <h3 className="font-bold mt-4">Added Details</h3>
+            <ul className="list-disc pl-5">
+              {room.addedDetails && (
+                <li>
+                  <strong>Room Number:</strong> {room.addedDetails.roomNumber} <br />
+                  <strong>Check-in Date:</strong> {room.addedDetails.checkinDate} <br />
+                  <strong>Check-out Date:</strong> {room.addedDetails.checkoutDate} <br />
+                  <strong>Price per Date:</strong> ${room.addedDetails.pricePerDate} <br />
+                  <strong>Total Rent:</strong> ${room.addedDetails.totalRent}
+                </li>
+              )}
+            </ul>
+
+            <div className="flex flex-col space-y-2 mt-4">
+              <button
+                onClick={() => printRoomDetails(room.id)}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Print Room Details
+              </button>
+              <button
+                onClick={() => clearRoom(room.id)}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Clear Room
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default RoomBooking;
+
+
+
+
+ <ul className="list-disc pl-5">
+              <li>
+                <strong>Total Rent:</strong> $
+                {calculateTotalRent(
+                  room.checkinDate,
+                  room.checkoutDate,
+                  room.pricePerDate
+                )}
+              </li>
+              {room.orders.length > 0 && (
+                <li>
+                  <strong>Orders:</strong>
+                  <ul className="list-inside list-disc">
+                    {room.orders.map((order, idx) => (
+                      <li key={idx}>
+                        {order.itemName} - ${order.price} x {order.quantity} (
+                        {order.paid ? "Paid" : "Not Paid"})
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              )}
+            </ul>
+
+
+
+            <th className="p-4 text-left text-sm font-medium text-gray-700 border">Lodging Price</th>
+              <th className="p-4 text-left text-sm font-medium text-gray-700 border">Parcel Price</th>
+              <th className="p-4 text-left text-sm font-medium text-gray-700 border">Type</th>
+              <th className="p-4 text-left text-sm font-medium text-gray-700 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dataList.map((item, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="p-4 text-sm text-gray-800 border">{item.code}</td>
+                <td className="p-4 text-sm text-gray-800 border">{item.name}</td>
+                <td className="p-4 text-sm text-gray-800 border">{item.counter}</td>
+                <td className="p-4 text-sm text-gray-800 border">{item.price}</td>
+                <td className="p-4 text-sm text-gray-800 border">{item.lodgingPrice}</td>
+                <td className="p-4 text-sm text-gray-800 border">{item.parcelPrice}</td>
+                <td className="p-4 text-sm text-gray-800 border">{item.type}</td>
+                <td className="p-4 text-sm text-gray-800 border">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(index)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center justify-center hover:bg-blue-700 transition ease-in-out"
+                    >
+                      <FaEdit className="mr-2" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(index)}
+                      className="bg-red-600 text-white px-4 py-2 rounded-md flex items-center justify-center hover:bg-red-700 transition ease-in-out"
+                    >
+                      <FaTrashAlt className="mr-2" />
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default BarRestaurantDataForm;
+
